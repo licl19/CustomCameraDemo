@@ -13,8 +13,6 @@ import Toast_Swift
 
 class ViewController: UIViewController {
     typealias PropertyChangeBlock = (_ captureDevice : AVCaptureDevice) -> Void
-    
-    let PropertyChangeBlock = {(captureDevice : AVCaptureDevice) -> () in }
 
     lazy var captureSession : AVCaptureSession = {
         let captureSessionTmp = AVCaptureSession()
@@ -115,7 +113,7 @@ class ViewController: UIViewController {
         }
         if image != nil {
             print(image)
-            self.view.makeToast("Success!", duration: 3.0, position: .center)
+            view.makeToast("Success!", duration: 3.0, position: .center)
         }
     }
     override func viewDidLoad() {
@@ -248,17 +246,6 @@ class ViewController: UIViewController {
             }else if flashMode == AVCaptureDevice.FlashMode.off {
                 flashOffButton.isEnabled = false
             }
-//            switch (flashMode) {
-//                case AVCaptureDevice.FlashMode.auto:
-//                     flashAutoButton.isEnabled = false
-//                     break
-//                case AVCaptureDevice.FlashMode.on:
-//                     flashOnButton.isEnabled = false
-//                     break
-//                case AVCaptureDevice.FlashMode.off:
-//                     flashOffButton.isEnabled = false
-//                     break
-//            }
         }else {
             flashAutoButton.isHidden = true
             flashOnButton.isHidden = true
