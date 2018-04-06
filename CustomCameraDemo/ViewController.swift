@@ -239,12 +239,18 @@ class ViewController: UIViewController {
             flashAutoButton.isEnabled = true
             flashOnButton.isEnabled = true
             flashOffButton.isEnabled = true
-            if flashMode == AVCaptureDevice.FlashMode.auto {
-                flashAutoButton.isEnabled = false
-            }else if flashMode == AVCaptureDevice.FlashMode.on {
-                flashOnButton.isEnabled = false
-            }else if flashMode == AVCaptureDevice.FlashMode.off {
-                flashOffButton.isEnabled = false
+            switch (flashMode) {
+                case .auto?:
+                    flashAutoButton.isEnabled = false
+                    break
+                case .on?:
+                    flashOnButton.isEnabled = false
+                    break
+                case .off?:
+                    flashOffButton.isEnabled = false
+                    break
+                case .none:
+                    break
             }
         }else {
             flashAutoButton.isHidden = true
