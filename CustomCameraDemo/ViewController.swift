@@ -67,6 +67,11 @@ class ViewController: UIViewController {
         }
     }
     @IBAction func toggleButtonClick(_ sender: UIButton) {
+        let animation = CATransition()
+        animation.duration = CFTimeInterval.init(0.5)
+        animation.timingFunction = CAMediaTimingFunction.init(name: kCAMediaTimingFunctionEaseInEaseOut)
+        animation.type = "oglFlip"
+        
         let currentDevice = captureDeviceInput?.device
         let currentPosition = currentDevice?.position
         removeNotificationFromCaptureDevice(captureDevice: currentDevice!)
@@ -74,7 +79,12 @@ class ViewController: UIViewController {
         var toChangePosition = AVCaptureDevice.Position.front
         if currentPosition == AVCaptureDevice.Position.unspecified || currentPosition == AVCaptureDevice.Position.front {
             toChangePosition = AVCaptureDevice.Position.back
+            animation.subtype = kCATransitionFromLeft
+        }else {
+            animation.subtype = kCATransitionFromRight
         }
+        captureVideoPreviewLayer.add(animation, forKey: "flip")
+        
         toChangeDevice = getCameraDeviceWithPosition(position: toChangePosition)
         addNotificationToCaptureDevice(captureDevice: toChangeDevice!)
         do {
@@ -128,7 +138,6 @@ class ViewController: UIViewController {
             """)
         }
         do {
-//            let captureDeviceInput = try AVCaptureDeviceInput.init(device: captureDevice!)
             if captureSession.canAddInput(captureDeviceInput!) {
                 captureSession.addInput(captureDeviceInput!)
             }
