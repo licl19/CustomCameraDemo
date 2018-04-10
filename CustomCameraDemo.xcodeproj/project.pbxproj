@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		64BD330A207BBAB3006374D4 /* MTCamera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64BD3309207BBAB3006374D4 /* MTCamera.swift */; };
 		64D61B1120763C4F00AB5F6A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64D61B1020763C4F00AB5F6A /* AppDelegate.swift */; };
 		64D61B1320763C4F00AB5F6A /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64D61B1220763C4F00AB5F6A /* ViewController.swift */; };
 		64D61B1620763C4F00AB5F6A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 64D61B1420763C4F00AB5F6A /* Main.storyboard */; };
@@ -36,6 +37,7 @@
 
 /* Begin PBXFileReference section */
 		01C1B3D21909F691EE432BD5 /* Pods-CustomCameraDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CustomCameraDemo.release.xcconfig"; path = "Pods/Target Support Files/Pods-CustomCameraDemo/Pods-CustomCameraDemo.release.xcconfig"; sourceTree = "<group>"; };
+		64BD3309207BBAB3006374D4 /* MTCamera.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTCamera.swift; sourceTree = "<group>"; };
 		64D61B0D20763C4E00AB5F6A /* CustomCameraDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CustomCameraDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		64D61B1020763C4F00AB5F6A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		64D61B1220763C4F00AB5F6A /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -123,6 +125,7 @@
 			children = (
 				64D61B1020763C4F00AB5F6A /* AppDelegate.swift */,
 				64D61B1220763C4F00AB5F6A /* ViewController.swift */,
+				64BD3309207BBAB3006374D4 /* MTCamera.swift */,
 				64D61B1420763C4F00AB5F6A /* Main.storyboard */,
 				64D61B1720763C4F00AB5F6A /* Assets.xcassets */,
 				64D61B1920763C4F00AB5F6A /* LaunchScreen.storyboard */,
@@ -339,6 +342,7 @@
 			files = (
 				64D61B1320763C4F00AB5F6A /* ViewController.swift in Sources */,
 				64D61B1120763C4F00AB5F6A /* AppDelegate.swift in Sources */,
+				64BD330A207BBAB3006374D4 /* MTCamera.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -8,188 +8,129 @@
 
 import UIKit
 import AVFoundation
-import AssetsLibrary
 import Toast_Swift
 
 class ViewController: UIViewController {
-    // MARK: 定义Block
-    typealias PropertyChangeBlock = (_ captureDevice : AVCaptureDevice) -> Void
-
-    lazy var captureSession : AVCaptureSession = {
-        let captureSessionTmp = AVCaptureSession()
-        if captureSessionTmp.canSetSessionPreset(AVCaptureSession.Preset.photo) {
-            captureSessionTmp.sessionPreset = AVCaptureSession.Preset.photo
-        }
-        return captureSessionTmp
-    }()
-    lazy var captureDeviceInput : AVCaptureDeviceInput? = {
-        let captureDevice = getCameraDeviceWithPosition(position: AVCaptureDevice.Position.back)
-        do {
-            let captureDeviceInputTmp = try AVCaptureDeviceInput.init(device: captureDevice!)
-            return captureDeviceInputTmp
-        }catch {
-            print(error)
-        }
-        return nil
-    }()
-    lazy var captureStillImageOutput : AVCaptureStillImageOutput = {
-        let captureStillImageOutputTmp = AVCaptureStillImageOutput()
-        captureStillImageOutputTmp.outputSettings = [AVVideoCodecKey:AVVideoCodecJPEG]
-        return captureStillImageOutputTmp
-    }()
-    // MARK: 用于实时数据处理，例如人脸识别
-    lazy var sampleBufferQueue : DispatchQueue = {
-        return DispatchQueue(label: Bundle.main.bundleIdentifier! +
-            ".sampleBufferQueue")
-    }()
-    // MARK: 用于实时数据处理
-    lazy var captureVideoDataOutput : AVCaptureVideoDataOutput = {
-        let captureVideoDataOutputTmp = AVCaptureVideoDataOutput()
-        captureVideoDataOutputTmp.alwaysDiscardsLateVideoFrames = true
-        captureVideoDataOutputTmp.setSampleBufferDelegate(self as! AVCaptureVideoDataOutputSampleBufferDelegate, queue: sampleBufferQueue)
-        captureVideoDataOutputTmp.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String : Int(kCVPixelFormatType_32BGRA)]
-        return captureVideoDataOutputTmp
-    }()
-    // MARK: 识别结果框
+    
+    // MARK: 识别结果框,用于人脸识别
     lazy var labelResults : [UILabel] = {
         return []
     }()
-    lazy var captureVideoPreviewLayer : AVCaptureVideoPreviewLayer = {
-        let captureVideoPreviewLayerTmp = AVCaptureVideoPreviewLayer.init(session: captureSession)
-        return captureVideoPreviewLayerTmp
+    // MARK: 时间label,用于录像
+    lazy var recordTimeLabel : UILabel = {
+        let recordTimeLabelTmp = UILabel()
+        recordTimeLabelTmp.backgroundColor = .clear
+        recordTimeLabelTmp.textAlignment = .center
+        recordTimeLabelTmp.textColor = .black
+        recordTimeLabelTmp.isHidden = true
+        return recordTimeLabelTmp
     }()
+    let recordTimeMax = 8.0
+    let recordTimeRefresh = 0.05
+    var recordTimer : Timer?
+    var recordTime : Double?
     
-    @IBOutlet weak var ViewContainer: UIView!
-    @IBOutlet weak var takeButton: UIButton!
-    @IBOutlet weak var flashAutoButton: UIButton!
-    @IBOutlet weak var flashOnButton: UIButton!
-    @IBOutlet weak var flashOffButton: UIButton!
-    @IBOutlet weak var focusCursor: UIImageView!
+    
+    
+    @IBOutlet dynamic weak var viewContainer: UIView!
+    @IBOutlet dynamic weak var flashAutoButton: UIButton!
+    @IBOutlet dynamic weak var flashOnButton: UIButton!
+    @IBOutlet dynamic weak var flashOffButton: UIButton!
+    @IBOutlet dynamic weak var focusCursor: UIImageView!
+    @IBOutlet dynamic weak var takePhotoImageView: UIImageView!
+    
+    
     
     // MARK: 关闭闪光灯
-    @IBAction func flashOffClick(_ sender: UIButton) {
-        setFlashMode(flashMode: AVCaptureDevice.FlashMode.off)
+    @IBAction dynamic func flashOffClick(_ sender: UIButton) {
+        MTCamera.shared.flashOffClick()
         setFlashModeButtonStatus()
     }
     // MARK: 开启闪光灯
-    @IBAction func flashOnClick(_ sender: UIButton) {
-        setFlashMode(flashMode: AVCaptureDevice.FlashMode.on)
+    @IBAction dynamic func flashOnClick(_ sender: UIButton) {
+        MTCamera.shared.flashOnClick()
         setFlashModeButtonStatus()
     }
     // MARK: 闪光灯自动
-    @IBAction func flashAutoClick(_ sender: UIButton) {
-        setFlashMode(flashMode: AVCaptureDevice.FlashMode.auto)
+    @IBAction dynamic func flashAutoClick(_ sender: UIButton) {
+        MTCamera.shared.flashAutoClick()
         setFlashModeButtonStatus()
     }
-    private func setFlashMode(flashMode : AVCaptureDevice.FlashMode) {
-        changeDeviceProperty { (captureDevice) in
-            if captureDevice.isFlashModeSupported(flashMode) {
-                captureDevice.flashMode = flashMode
-            }
-        }
-    }
     // MARK: 切换摄像头
-    @IBAction func toggleButtonClick(_ sender: UIButton) {
-        // MARK: 切换动画
-        let animation = CATransition()
-        animation.duration = CFTimeInterval.init(0.5)
-        animation.timingFunction = CAMediaTimingFunction.init(name: kCAMediaTimingFunctionEaseInEaseOut)
-        animation.type = "oglFlip"
-        
-        let currentDevice = captureDeviceInput?.device
-        let currentPosition = currentDevice?.position
-        removeNotificationFromCaptureDevice(captureDevice: currentDevice!)
-        var toChangeDevice : AVCaptureDevice?
-        var toChangePosition = AVCaptureDevice.Position.front
-        if currentPosition == AVCaptureDevice.Position.unspecified || currentPosition == AVCaptureDevice.Position.front {
-            toChangePosition = AVCaptureDevice.Position.back
-            animation.subtype = kCATransitionFromLeft
-        }else {
-            animation.subtype = kCATransitionFromRight
-        }
-        captureVideoPreviewLayer.add(animation, forKey: "flip")
-        
-        toChangeDevice = getCameraDeviceWithPosition(position: toChangePosition)
-        addNotificationToCaptureDevice(captureDevice: toChangeDevice!)
-        do {
-            let toChangeDeviceInput = try AVCaptureDeviceInput.init(device: toChangeDevice!)
-            captureSession.beginConfiguration()
-            captureSession.removeInput(captureDeviceInput!)
-            if captureSession.canAddInput(toChangeDeviceInput) {
-                captureSession.addInput(toChangeDeviceInput)
-                captureDeviceInput = toChangeDeviceInput
-            }
-            captureSession.commitConfiguration()
-            setFlashModeButtonStatus()
-        } catch {
-            print(error)
-        }
+    @IBAction dynamic func devicePositionChangeClick(_ sender: UIButton) {
+        MTCamera.shared.devicePositionChangeClick()
+        setFlashModeButtonStatus()
     }
-    private func removeNotificationFromCaptureDevice(captureDevice : AVCaptureDevice) {
-        NotificationCenter.default.removeObserver(self, name: Notification.Name.AVCaptureDeviceSubjectAreaDidChange, object: captureDevice)
-    }
+    
+    
     
     // MARK: 拍照，保存图片
-    @IBAction func takeButtonClick(_ sender: UIButton) {
-        let captureConnection = captureStillImageOutput.connection(with: AVMediaType.video)
-        captureStillImageOutput.captureStillImageAsynchronously(from: captureConnection!) { (imageDataSampleBuffer, error) in
-            if imageDataSampleBuffer != nil {
-                let imageData = AVCaptureStillImageOutput.jpegStillImageNSDataRepresentation(imageDataSampleBuffer!)
-                let image = UIImage.init(data: imageData!)
-                UIImageWriteToSavedPhotosAlbum(image!, self, #selector(self.imageDidFinishSavingWithError(image:error:contextInfo:)), nil)
-            }
-        }
-        
+    @objc dynamic func takePhotoClick() {
+        recordTimeLabel.text = ""
+        recordTimeLabel.isHidden = true
+        MTCamera.shared.takePhoto()
     }
-    @objc private func imageDidFinishSavingWithError(image: UIImage, error: NSError, contextInfo: UnsafeMutableRawPointer) {
-        if error != nil {
-            print(error)
+    // MARK: 录制视频
+    @objc dynamic func takeVideoClick(longPressGesture : UILongPressGestureRecognizer) {
+        if longPressGesture.state == .began {
+            MTCamera.shared.startRecord()
+            recordTimeLabel.text = ""
+            recordTimeLabel.isHidden = false
+            recordTime = 0.0
+            recordTimer = Timer.scheduledTimer(timeInterval: recordTimeRefresh, target: self, selector: #selector(timeRefresh), userInfo: nil, repeats: true)
+            RunLoop.main.add(recordTimer!, forMode: .commonModes)
+        }else if longPressGesture.state == .ended || longPressGesture.state == .cancelled || longPressGesture.state == .failed {
+            MTCamera.shared.stopRecord()
+            recordTimer?.invalidate()
+            recordTimer = nil
         }
-        if image != nil {
-            print(image)
-            view.makeToast("Success!", duration: 3.0, position: .center)
+    }
+    @objc dynamic fileprivate func timeRefresh() {
+        recordTime = recordTime! + recordTimeRefresh
+        recordTimeLabel.text = String(format: "%.1fs", recordTime!)
+        if recordTime! >= recordTimeMax {
+            MTCamera.shared.stopRecord()
+            recordTimer?.invalidate()
+            recordTimer = nil
         }
     }
     
-    // MARK: 添加数据处理
-    // MARK: 在需要的地方调用即可
-    func addVideoDataOutput() -> Void {
-        if captureSession.canAddOutput(captureVideoDataOutput) {
-            captureSession.addOutput(captureVideoDataOutput)
-        }
-    }
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
     }
     // MARK: 初始化相机
     override func viewWillAppear(_ animated: Bool) {
-        do {
-            if captureSession.canAddInput(captureDeviceInput!) {
-                captureSession.addInput(captureDeviceInput!)
-            }
-            if captureSession.canAddOutput(captureStillImageOutput) {
-                captureSession.addOutput(captureStillImageOutput)
-            }
-            let layer = ViewContainer.layer
-            layer.masksToBounds = true
-            captureVideoPreviewLayer.frame = layer.bounds
-            captureVideoPreviewLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
-            layer.insertSublayer(captureVideoPreviewLayer, below: focusCursor.layer)
-            
-            addNotificationToCaptureDevice(captureDevice: (captureDeviceInput?.device)!)
-            addGenstureRecognizer()
-            setFlashModeButtonStatus()
-            
-            
-            addVideoDataOutput()
-        } catch {
-            print(error)
-        }
+        let tapGesture = UITapGestureRecognizer.init(target: self, action: #selector(takePhotoClick))
+        tapGesture.numberOfTouchesRequired = 1
+        tapGesture.numberOfTouchesRequired = 1
+        takePhotoImageView.addGestureRecognizer(tapGesture)
+        
+        let longPressGesture = UILongPressGestureRecognizer.init(target: self, action: #selector(takeVideoClick(longPressGesture:)))
+        longPressGesture.minimumPressDuration = 1
+        takePhotoImageView.addGestureRecognizer(longPressGesture)
+        
+        viewContainer.addSubview(recordTimeLabel)
+        recordTimeLabel.frame = CGRect(x: viewContainer.bounds.size.width/2-35, y: 0, width: 70, height: 35)
+        recordTime = 0.0
+        
+        // MARK: 初始化相机
+        MTCamera.shared.setupCamera()
+        MTCamera.shared.delegate = self
+        let layer = viewContainer.layer
+        layer.masksToBounds = true
+        let captureVideoPreviewLayer = MTCamera.shared.captureVideoPreviewLayer
+        captureVideoPreviewLayer.frame = layer.bounds
+        layer.insertSublayer(captureVideoPreviewLayer, below: focusCursor.layer)
+        
+        addGenstureRecognizer()
+        setFlashModeButtonStatus()
     }
     // MARK: 闪光灯按钮状态初始化
-    private func setFlashModeButtonStatus() {
-        let captureDevice = captureDeviceInput?.device
+    fileprivate func setFlashModeButtonStatus() {
+        let captureDevice = MTCamera.shared.captureDeviceCamera
         let flashMode = captureDevice?.flashMode
         if captureDevice?.isFlashAvailable == true {
             flashAutoButton.isHidden = false
@@ -219,60 +160,28 @@ class ViewController: UIViewController {
     }
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        captureSession.startRunning()
+        MTCamera.shared.startRunningSession()
     }
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        captureSession.stopRunning()
-    }
-    // MARK: 获取对应位置相机
-    private func getCameraDeviceWithPosition(position : AVCaptureDevice.Position) -> AVCaptureDevice? {
-        let cameras = AVCaptureDevice.devices(for: AVMediaType.video)
-        for camera : AVCaptureDevice in cameras {
-            if camera.position == position {
-                return camera
-            }
-        }
-        return nil
+        MTCamera.shared.stopRunningSession()
     }
     
     
     
-    private func addNotificationToCaptureDevice(captureDevice : AVCaptureDevice) {
-        changeDeviceProperty { (captureDevice) in
-            captureDevice.isSubjectAreaChangeMonitoringEnabled = true
-        }
-        NotificationCenter.default.addObserver(self, selector: #selector(areaChange(noti:)), name: Notification.Name.AVCaptureDeviceSubjectAreaDidChange, object: captureDevice)
-    }
-    // MARK: 修改相机属性，需加锁
-    private func changeDeviceProperty(propertyChange : PropertyChangeBlock) {
-        let captureDevice = captureDeviceInput?.device
-        do {
-            try captureDevice?.lockForConfiguration()
-            propertyChange(captureDevice!)
-            captureDevice?.unlockForConfiguration()
-        } catch {
-            print(error)
-        }
-    }
-    @objc private func areaChange(noti : Notification) {
-    }
-    
-    
-    
-    private func addGenstureRecognizer() {
+    fileprivate func addGenstureRecognizer() {
         let tap = UITapGestureRecognizer.init(target: self, action: #selector(tapScreen(tapGesture:)))
-        ViewContainer.addGestureRecognizer(tap)
+        viewContainer.addGestureRecognizer(tap)
     }
     // MARK: 对焦
-    @objc private func tapScreen(tapGesture : UITapGestureRecognizer) {
-        let pointTap = tapGesture.location(in: ViewContainer)
-        let pointCamera = captureVideoPreviewLayer.captureDevicePointConverted(fromLayerPoint: pointTap)
+    @objc dynamic fileprivate func tapScreen(tapGesture : UITapGestureRecognizer) {
+        let pointTap = tapGesture.location(in: viewContainer)
+        let pointCamera = MTCamera.shared.captureVideoPreviewLayer.captureDevicePointConverted(fromLayerPoint: pointTap)
         setFocusCursorWithPoint(point: pointTap)
-        focusWithMode(focusMode: AVCaptureDevice.FocusMode.autoFocus, exposureMode: AVCaptureDevice.ExposureMode.autoExpose, point: pointCamera)
+        MTCamera.shared.focusWithMode(focusMode: AVCaptureDevice.FocusMode.autoFocus, exposureMode: AVCaptureDevice.ExposureMode.autoExpose, point: pointCamera)
     }
     // MARK: 对焦动画
-    private func setFocusCursorWithPoint(point : CGPoint) {
+    fileprivate func setFocusCursorWithPoint(point : CGPoint) {
         focusCursor.center = point
         focusCursor.transform = CGAffineTransform.init(scaleX: 1.5, y: 1.5)
         focusCursor.alpha = 1.0
@@ -282,55 +191,7 @@ class ViewController: UIViewController {
             self.focusCursor.alpha = 0
         }
     }
-    private func focusWithMode(focusMode : AVCaptureDevice.FocusMode, exposureMode : AVCaptureDevice.ExposureMode, point : CGPoint) {
-        changeDeviceProperty { (captureDevice) in
-            if captureDevice.isFocusModeSupported(focusMode) {
-                captureDevice.focusMode = focusMode
-            }
-            if captureDevice.isFocusPointOfInterestSupported {
-                captureDevice.focusPointOfInterest = point
-            }
-            if captureDevice.isExposureModeSupported(exposureMode) {
-                captureDevice.exposureMode = exposureMode
-            }
-            if captureDevice.isExposurePointOfInterestSupported {
-                captureDevice.exposurePointOfInterest = point
-            }
-        }
-    }
 
-    // MARK: 设置对焦模式
-    private func setFocusMode(focusMode : AVCaptureDevice.FocusMode) {
-        changeDeviceProperty { (captureDevice) in
-            if captureDevice.isFocusModeSupported(focusMode) {
-                captureDevice.focusMode = focusMode
-            }
-        }
-    }
-    // MARK: 设置曝光模式
-    private func setExposureMode(exposureMode : AVCaptureDevice.ExposureMode) {
-        changeDeviceProperty { (captureDevice) in
-            if captureDevice.isExposureModeSupported(exposureMode) {
-                captureDevice.exposureMode = exposureMode
-            }
-        }
-    }
-    // MARK: 设置手电筒
-    private func setTorchMode(torchMode : AVCaptureDevice.TorchMode) {
-        changeDeviceProperty { (captureDevice) in
-            if captureDevice.isTorchModeSupported(torchMode) {
-                captureDevice.torchMode = torchMode
-            }
-        }
-    }
-    // MARK: 设置白平衡模式
-    private func setTorchMode(whiteBalanceMode : AVCaptureDevice.WhiteBalanceMode) {
-        changeDeviceProperty { (captureDevice) in
-            if captureDevice.isWhiteBalanceModeSupported(whiteBalanceMode) {
-                captureDevice.whiteBalanceMode = whiteBalanceMode
-            }
-        }
-    }
     
     
     override func didReceiveMemoryWarning() {
@@ -340,86 +201,23 @@ class ViewController: UIViewController {
 }
 
 
-
-// MARK: AVCaptureVideoDataOutputSampleBufferDelegate
-extension ViewController : AVCaptureVideoDataOutputSampleBufferDelegate {
-    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        let image = imageFromSampleBuffer(sampleBuffer: sampleBuffer)
-        let features = detectFaceResultWithImage(image: image)
-        guard features != nil else {
-            DispatchQueue.main.async {
-                for labelResult : UILabel in self.labelResults {
-                    labelResult.isHidden = true
-                }
-            }
-            return
-        }
-        DispatchQueue.main.async {
-            if self.labelResults.count < (features?.count)! {
-                for _ in 0..<(features?.count)!-self.labelResults.count {
-                    let labelResult = UILabel()
-                    labelResult.backgroundColor = .clear
-//                    labelResult.layer.borderColor = .red
-                    labelResult.layer.borderWidth = 1
-                    self.ViewContainer.addSubview(labelResult)
-                    self.labelResults.append(labelResult)
-                }
-            }
-            for (offset ,labelResult) in self.labelResults.enumerated() {
-                if offset < (features?.count)! {
-                    labelResult.isHidden = false
-                    let rectValue = features![offset] as NSValue
-                    labelResult.frame = self.rectFromOriRect(originAllRect: rectValue.cgRectValue)
-                }else {
-                    labelResult.isHidden = true
-                }
-            }
+extension ViewController : MTCameraDelegate {
+    func recordFinished(error: NSError?, url: URL?) {
+        if let url = url {
+            print(url)
+            view.makeToast("Success!", duration: 3.0, position: .center)
         }
     }
-    // MARK: 获取图上rect
-    private func rectFromOriRect(originAllRect : CGRect) -> CGRect {
-        print(originAllRect)
-        let scrSalImageW = 720/UIScreen.main.bounds.size.width
-        let scrSalImageH = (1280-164)/(UIScreen.main.bounds.size.height-164)
-        var getRect = originAllRect
-        getRect.size.width = originAllRect.size.width/scrSalImageW
-        getRect.size.height = originAllRect.size.height/scrSalImageH
-        let hx = self.ViewContainer.bounds.size.width/720
-        let hy = self.ViewContainer.bounds.size.height/(1280-164)
-        getRect.origin.x = originAllRect.origin.x*hx
-        getRect.origin.y = (self.ViewContainer.bounds.size.height-originAllRect.origin.y*hy)-getRect.size.height
-        print(getRect)
-        return getRect
-    }
-    // MARK: 从缓存数据创建图片
-    private func imageFromSampleBuffer(sampleBuffer : CMSampleBuffer) -> UIImage {
-        let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer)
-        let ciImage = CIImage.init(cvPixelBuffer: imageBuffer!)
-        let ciContext = CIContext.init(options: nil)
-        let videoImage = ciContext.createCGImage(ciImage, from: CGRect(x: 0, y: 0, width :CVPixelBufferGetWidth(imageBuffer!), height :CVPixelBufferGetHeight(imageBuffer!)))
-        let imageResult = UIImage.init(cgImage: videoImage!, scale: 1.0, orientation: UIImageOrientation.leftMirrored)
-        return imageResult
-    }
-    // MARK: 识别结果
-    private func detectFaceResultWithImage(image : UIImage) -> [NSValue]? {
-        guard hasFace(image: image) else { return nil }
-        let features = detectFaceWithImage(image: image)
-        var arrM = [NSValue]()
-        for feature : CIFeature in features {
-            arrM.append(NSValue.init(cgRect: feature.bounds))
+    
+    func takePhotoFinished(error: NSError?, image: UIImage?) {
+        if let image = image {
+            print(image)
+            view.makeToast("Success!", duration: 3.0, position: .center)
         }
-        return arrM
-    }
-    // MARK: 是否识别脸部
-    private func hasFace(image : UIImage) -> Bool {
-        let features = detectFaceWithImage(image: image)
-        return features.count > 0
-    }
-    // MARK: 识别脸部特征
-    private func detectFaceWithImage(image : UIImage) -> [CIFeature] {
-        let faceDetector = CIDetector.init(ofType: CIDetectorTypeFace, context: nil, options: [CIDetectorAccuracy: CIDetectorAccuracyHigh])
-        let ciImage = CIImage.init(image: image)
-        let features = faceDetector?.features(in: ciImage!)
-        return features!
     }
 }
+
+
+
+
+

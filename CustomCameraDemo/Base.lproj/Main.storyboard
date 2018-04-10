@@ -34,7 +34,7 @@
                                             <color key="titleShadowColor" white="0.66666666666666663" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                         </state>
                                         <connections>
-                                            <action selector="toggleButtonClick:" destination="BYZ-38-t0r" eventType="touchUpInside" id="iOr-mj-Grd"/>
+                                            <action selector="devicePositionChangeClick:" destination="BYZ-38-t0r" eventType="touchUpInside" id="cL2-Iy-pHd"/>
                                         </connections>
                                     </button>
                                     <button opaque="NO" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="3T0-KE-f9q">
@@ -103,17 +103,6 @@
                                     <constraint firstAttribute="height" constant="100" id="qPR-4E-Jqt"/>
                                 </constraints>
                             </imageView>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="q0Q-fR-uhN">
-                                <rect key="frame" x="151" y="587" width="73" height="73"/>
-                                <constraints>
-                                    <constraint firstAttribute="height" constant="73" id="OVe-rq-Xuj"/>
-                                    <constraint firstAttribute="width" constant="73" id="uo5-2G-Voz"/>
-                                </constraints>
-                                <state key="normal" image="icon_facial_btn_take" backgroundImage="sc_btn_take"/>
-                                <connections>
-                                    <action selector="takeButtonClick:" destination="BYZ-38-t0r" eventType="touchUpInside" id="TGi-KH-CTD"/>
-                                </connections>
-                            </button>
                             <view contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" translatesAutoresizingMaskIntoConstraints="NO" id="cnR-9W-FK0">
                                 <rect key="frame" x="0.0" y="64" width="375" height="509"/>
                                 <subviews>
@@ -131,21 +120,37 @@
                                     <constraint firstItem="xie-r8-wIX" firstAttribute="top" secondItem="cnR-9W-FK0" secondAttribute="top" constant="44" id="g6q-eb-zkx"/>
                                 </constraints>
                             </view>
+                            <imageView contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="sc_btn_take" translatesAutoresizingMaskIntoConstraints="NO" id="ySO-ee-BlV">
+                                <rect key="frame" x="147" y="583" width="80" height="80"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="80" id="Mqd-Fc-pEt"/>
+                                    <constraint firstAttribute="width" constant="80" id="YAe-kQ-5Se"/>
+                                </constraints>
+                            </imageView>
+                            <imageView contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="icon_facial_btn_take" translatesAutoresizingMaskIntoConstraints="NO" id="GMG-v4-aVG">
+                                <rect key="frame" x="169.5" y="605.5" width="35" height="35"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="35" id="gIL-qS-RgZ"/>
+                                    <constraint firstAttribute="width" constant="35" id="oZm-Nz-Bd1"/>
+                                </constraints>
+                            </imageView>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
+                            <constraint firstItem="GMG-v4-aVG" firstAttribute="centerX" secondItem="HpJ-Np-Vs6" secondAttribute="centerX" id="0Sh-pN-8FO"/>
                             <constraint firstItem="cnR-9W-FK0" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="5Pq-dO-I3D"/>
                             <constraint firstItem="61Q-2X-dkj" firstAttribute="trailing" secondItem="8bC-Xf-vdC" secondAttribute="trailing" id="8LD-kE-luw"/>
                             <constraint firstItem="61Q-2X-dkj" firstAttribute="top" secondItem="8bC-Xf-vdC" secondAttribute="top" id="9og-GL-vGh"/>
+                            <constraint firstItem="ySO-ee-BlV" firstAttribute="centerY" secondItem="HpJ-Np-Vs6" secondAttribute="centerY" id="AJq-HY-1S6"/>
+                            <constraint firstItem="ySO-ee-BlV" firstAttribute="centerX" secondItem="HpJ-Np-Vs6" secondAttribute="centerX" id="CI3-h7-bpT"/>
                             <constraint firstItem="61Q-2X-dkj" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="Hzj-Z2-JfT"/>
                             <constraint firstItem="HpJ-Np-Vs6" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="PFS-9j-rdo"/>
                             <constraint firstItem="cnR-9W-FK0" firstAttribute="trailing" secondItem="8bC-Xf-vdC" secondAttribute="trailing" id="QfD-mV-wKv"/>
-                            <constraint firstItem="q0Q-fR-uhN" firstAttribute="centerY" secondItem="HpJ-Np-Vs6" secondAttribute="centerY" id="RXM-OB-5ec"/>
                             <constraint firstAttribute="bottom" secondItem="HpJ-Np-Vs6" secondAttribute="bottom" constant="-6" id="Ugx-er-FLt"/>
                             <constraint firstItem="HpJ-Np-Vs6" firstAttribute="trailing" secondItem="8bC-Xf-vdC" secondAttribute="trailing" id="Y68-ei-oXp"/>
                             <constraint firstItem="cnR-9W-FK0" firstAttribute="top" secondItem="61Q-2X-dkj" secondAttribute="bottom" id="uzT-BO-mGW"/>
-                            <constraint firstItem="q0Q-fR-uhN" firstAttribute="centerX" secondItem="HpJ-Np-Vs6" secondAttribute="centerX" id="vZQ-Bd-0gx"/>
                             <constraint firstItem="HpJ-Np-Vs6" firstAttribute="top" secondItem="cnR-9W-FK0" secondAttribute="bottom" id="y3b-QY-aro"/>
+                            <constraint firstItem="GMG-v4-aVG" firstAttribute="centerY" secondItem="HpJ-Np-Vs6" secondAttribute="centerY" id="y7k-d6-YpQ"/>
                         </constraints>
                     </view>
                     <connections>
@@ -154,7 +159,8 @@
                         <outlet property="flashOffButton" destination="Yut-jN-oSM" id="Zyf-Vd-eUs"/>
                         <outlet property="flashOnButton" destination="b5k-vF-6Hk" id="hTW-8s-1bo"/>
                         <outlet property="focusCursor" destination="xie-r8-wIX" id="Gy6-dl-mry"/>
-                        <outlet property="takeButton" destination="q0Q-fR-uhN" id="OAa-EO-dre"/>
+                        <outlet property="takePhotoImageView" destination="GMG-v4-aVG" id="pvZ-rE-FvA"/>
+                        <outlet property="viewContainer" destination="cnR-9W-FK0" id="doa-Bj-NEs"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
